@@ -1,7 +1,19 @@
-module "catalogue" {
+# Using open source module for security group creation
+# module "catalogue" {
 
-  source      = "terraform-aws-modules/security-group/aws"
-  name        = "${local.common_name_suffix}-catalogue"
-  description = "Security group for catalogue service with custom ports open within the VPC, egress all traffic"
+#   source          = "terraform-aws-modules/security-group/aws"
+#   name            = "${local.common_name_suffix}-catalogue"
+#   use_name_prefix = false
+#   description     = "Security group for catalogue service with custom ports open within the VPC, egress all traffic"
+#   vpc_id          = data.aws_ssm_parameter.vpc_id.value
+# }
 
+module "sg" {
+  count          = length(var.sg_names)
+  source         = "git::https://github.com/talktobandarusuresh-ux/terraform-aws-sg.git?ref=main"
+  project_name   = var.project_name
+  environment    = var.environment
+  sg_name        = "mongodb"
+  sg_description = "created for mongodb"
+  vpc_id         = local.vpc_id
 }
