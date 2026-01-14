@@ -1,31 +1,28 @@
-resource "aws_instance" "terraform" {
-  ami                    = "ami-09c813fb71547fc4f"
+resource "aws_instance" "bastion" {
+  ami                    = local.ami_id
   instance_type          = "t3.micro"
-  vpc_security_group_ids = [aws_security_group.allow_all_traffic.id]
-  tags = {
-    Name      = "terraform"
-    Terraform = "true"
+  vpc_security_group_ids = [local.bastion_sg_id]
+  subnet_id              = local.public_subnet_id
+  iam_instance_profile   = aws_iam_instance_profile.bastion.name
+  # need more for terraform
+  root_block_device {
+    volume_size = 50
+    volume_type = "gp3" # or "gp2", depending on your preference
   }
+
+  user_data = file("bastion.sh")
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "${var.project_name}-${var.environment}-bastion"
+    }
+  )
 }
-resource "aws_security_group" "allow_all_traffic" {
-  name = "allow_all_traffic"
-  # ... other configuration ...
-  tags = {
 
-    name  = "terraformSG"
-    value = "terraform"
-  }
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
 
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+
+resource "aws_iam_instance_profile" "bastion" {
+  name = "bastion"
+  role = "BastionTerraformAdmin"
 }
